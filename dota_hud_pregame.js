@@ -663,14 +663,16 @@ function OnShowDrawCard(keys){
     var courier_level = Entities.GetLevel(courier_id);
     /*START-DRAWSTAT*/  
     
-    hero_counts = getCurrentChamps();
-    var size_total_pool = get_total_size_of_pool(hero_counts, courier_level);
+
 
     /*END-DRAWSTAT*/ 
 
     // Add Tier + Probability
 
     $.Schedule(0.75, function(){
+        var hero_counts_draw = getCurrentChamps();
+        var size_total_pool = get_total_size_of_pool(hero_counts_draw, courier_level);
+        
         var times = 5;
         for(var i=0; i < times; i++){
             var champ_name = find_dota_hud_element('panel_hero_draw_card_' + i).FindChild('text_draw_card_' + i).text.replace('★', '').trim();
@@ -682,8 +684,8 @@ function OnShowDrawCard(keys){
 
             /*START-DRAWSTAT*/  
 
-            if (champ_name in hero_counts) {
-                var hero_in_play = hero_counts[champ_name];
+            if (champ_name in hero_counts_draw) {
+                var hero_in_play = hero_counts_draw[champ_name];
             } else {
                 var hero_in_play = 0
             }
