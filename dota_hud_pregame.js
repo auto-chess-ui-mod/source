@@ -148,63 +148,127 @@ function calculate_draw_prop(champ_input, hero_counts_input, courier_level_input
 
 // Data inputs
 
-var tier_dict = {'Abaddon': 'C',
-'Alchemist': 'D',
-'Anti-mage': 'S',
-'Axe': 'D',
-'Batrider': 'E',
-'Beastmaster': 'C',
-'Bounty Hunter': 'S',
-'Chaos Knight': 'B',
-'Clockwerk': 'A',
-'Crystal Maiden': 'B',
-'Death Prophet': 'B',
-'Disruptor': 'B',
-'Doom': 'S',
-'Dragon Knight': 'A',
-'Drow Ranger': 'C',
-'Enchantress': 'D',
-'Enigma': 'A',
-'Furion': 'D',
-'Gyrocopter': 'C',
-'Juggernaut': 'C',
-'Keeper of the Light': 'B',
-'Kunkka': 'A',
-'Lich': 'C',
-'Lina': 'D',
-'Lone Druid': 'S',
-'Luna': 'C',
-'Lycan': 'B',
-'Mars': 'D',
-'Medusa': 'S',
-'Mirana': 'D',
-'Morphling': 'C',
-'Necrophos': 'A',
-'Ogre Magi': 'D',
-'Omniknight': 'B',
-'Phantom Assassin': 'B',
-'Puck': 'D',
-'Queen of Pain': 'B',
-'Razor': 'S',
-'Shadow Fiend': 'B',
-'Shadow Shaman': 'E',
-'Slardar': 'C',
-'Sniper': 'C',
-'Techies': 'A',
-'Templar Assassin': 'B',
-'Terrorblade': 'D',
-'Tidehunter': 'S',
-'Timbersaw': 'A',
-'Tinker': 'C',
-'Tiny': 'B',
-'Treant Protector': 'B',
-'Troll Warlord': 'B',
-'Tusk': 'C',
-'Venomancer': 'C',
-'Viper': 'C',
-'Windranger': 'C',
-'Witch Doctor': 'C',
-'Zeus': 'A'}
+var eng_to_cn = {
+    'Abaddon': '死亡骑士',
+    'Alchemist': '炼金术士',
+    'Anti-mage': '敌法师',
+    'Axe': '斧王',
+    'Batrider': '蝙蝠骑士',
+    'Beastmaster': '兽王',
+    'Bounty Hunter': '赏金猎人',
+    'Chaos Knight': '混沌骑士',
+    'Clockwerk': '发条技师',
+    'Crystal Maiden': '水晶室女',
+    'Death Prophet': '死亡先知',
+    'Disruptor': '干扰者',
+    'Doom': '末日使者',
+    'Dragon Knight': '龙骑士',
+    'Drow Ranger': '卓尔游侠',
+    'Enchantress': '魅惑魔女',
+    'Enigma': '谜团',
+    'Furion': '先知',
+    'Gyrocopter': '矮人直升机',
+    'Juggernaut': '剑圣',
+    'Keeper of the Light': '光之守卫',
+    'Kunkka': '海军上将',
+    'Lich': '巫妖',
+    'Lina': '秀逗魔导士',
+    'Lone Druid': '利爪德鲁伊',
+    'Luna': '月之骑士', 
+    'Lycan': '狼人',
+    'Mars': '天界战神',
+    'Medusa': '蛇发女妖',
+    'Mirana': '月之女祭司',
+    'Morphling': '变体精灵', 
+    'Necrophos': '死灵法师',
+    'Ogre Magi': '食人魔魔法师',
+    'Omniknight': '全能骑士',
+    'Phantom Assassin': '幻影刺客',
+    'Puck': '精灵龙',
+    'Queen of Pain': '痛苦女王',
+    'Razor': '闪电幽魂',
+    'Shadow Fiend': '影魔',
+    'Shadow Shaman': '暗影萨满',
+    'Slardar': '鱼人守卫',
+    'Sniper': '狙击手',
+    'Techies': '地精工程师',
+    'Templar Assassin': '圣堂刺客',
+    'Terrorblade': '灵魂守卫',
+    'Tidehunter': '潮汐猎人',
+    'Timbersaw': '伐木机',
+    'Tinker': '修补匠',
+    'Tiny': '小小',
+    'Treant Protector': '树精卫士',
+    'Troll Warlord': '巨魔战将',
+    'Tusk': '巨牙海民',
+    'Venomancer': '剧毒术士',
+    'Viper': '冥界亚龙',
+    'Windranger': '风行者', 
+    'Witch Doctor': '巫医',
+    'Zeus': '众神之王',
+    'Grimstroke': '天涯墨客',
+    'Dazzle': '暗影牧师'
+}
+
+var tier_dict = {
+    'Abaddon': 'C',
+    'Alchemist': 'D',
+    'Anti-mage': 'S',
+    'Axe': 'D',
+    'Batrider': 'E',
+    'Beastmaster': 'C',
+    'Bounty Hunter': 'S',
+    'Chaos Knight': 'B',
+    'Clockwerk': 'A',
+    'Crystal Maiden': 'B',
+    'Death Prophet': 'B',
+    'Disruptor': 'B',
+    'Doom': 'S',
+    'Dragon Knight': 'A',
+    'Drow Ranger': 'C',
+    'Enchantress': 'D',
+    'Enigma': 'A',
+    'Furion': 'D',
+    'Gyrocopter': 'C',
+    'Juggernaut': 'C',
+    'Keeper of the Light': 'B',
+    'Kunkka': 'A',
+    'Lich': 'C',
+    'Lina': 'D',
+    'Lone Druid': 'S',
+    'Luna': 'C',
+    'Lycan': 'B',
+    'Mars': 'D',
+    'Medusa': 'S',
+    'Mirana': 'D',
+    'Morphling': 'C',
+    'Necrophos': 'A',
+    'Ogre Magi': 'D',
+    'Omniknight': 'B',
+    'Phantom Assassin': 'B',
+    'Puck': 'D',
+    'Queen of Pain': 'B',
+    'Razor': 'S',
+    'Shadow Fiend': 'B',
+    'Shadow Shaman': 'E',
+    'Slardar': 'C',
+    'Sniper': 'C',
+    'Techies': 'A',
+    'Templar Assassin': 'B',
+    'Terrorblade': 'D',
+    'Tidehunter': 'S',
+    'Timbersaw': 'A',
+    'Tinker': 'C',
+    'Tiny': 'B',
+    'Treant Protector': 'B',
+    'Troll Warlord': 'B',
+    'Tusk': 'C',
+    'Venomancer': 'C',
+    'Viper': 'C',
+    'Windranger': 'C',
+    'Witch Doctor': 'C',
+    'Zeus': 'A'
+}
 
 // Death Prophet (5), Treant (3), Mirana (2), Crystal Maiden (2)  might be wrong cost!
 
@@ -435,6 +499,34 @@ var first_time = true;
 
 function OnShowTime(keys) {
     if (first_time) {
+
+        // Detect language
+
+        if (find_dota_hud_element('text_bullet_toggle').text== '显示弹幕') {
+            $.Msg('Chinese client detected')
+
+            // Translate tier list
+
+            var tier_dict_cn = {};
+            Object.keys(tier_dict).forEach(function(key) {
+                tier_dict_cn[eng_to_cn[key]] = tier_dict[key];
+            });
+            tier_dict = tier_dict_cn;
+
+            // Translate hero details
+
+            var hero_dict_cn = {}
+            Object.keys(hero_dict).forEach(function(key) {
+                hero_dict_cn[key] = hero_dict[key];
+                hero_dict_cn[key]['name'] = eng_to_cn[hero_dict_cn[key]['name']]
+            });
+            hero_dict = hero_dict_cn;
+
+            $.Msg(hero_dict)
+
+        } else {
+            $.Msg('English client detected')
+        }
 
         // Get player info
         local_player_team = Players.GetTeam(Players.GetLocalPlayer());
