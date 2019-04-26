@@ -569,67 +569,6 @@ function OnShowTime(keys) {
         first_time = false;
 
     }
-
-    // Get current picked
-
-    /*START-DRAWSTAT*/  
-
-    hero_counts = getCurrentChamps();
-    var size_total_pool = get_total_size_of_pool(hero_counts, courier_level);
-
-    /*END-DRAWSTAT*/ 
-
-    // Add Tier + Probability
-
-    var times = 5;
-    for(var i=0; i < times; i++){
-        var champ_name = find_dota_hud_element('panel_hero_draw_card_' + i).FindChild('text_draw_card_' + i).text.replace('★', '').trim();
-        var champ_tier = tier_dict[champ_name];
-        var parentPanel = find_dota_hud_element('panel_hero_draw_card_' + i);
-        var costPanel = parentPanel.FindChild('text_draw_card_price_' + i);
-        var hero_cost = parseInt(costPanel.text.replace('×', ''));
-        var hero_pool = hero_pool_counts[hero_cost];
-
-        /*START-DRAWSTAT*/  
-
-        if (champ_name in hero_counts) {
-            var hero_in_play = hero_counts[champ_name];
-        } else {
-            var hero_in_play = 0
-        }
-
-        var num_hero_avail = hero_pool - hero_in_play;
-        var num_bad_draws = size_total_pool - num_hero_avail;
-        var prop_at_least_one = 1 - ((num_bad_draws / size_total_pool) * ((num_bad_draws - 1) / (size_total_pool - 1)) * ((num_bad_draws - 2) / (size_total_pool - 2)) * ((num_bad_draws - 3) / (size_total_pool - 3)) * ((num_bad_draws - 4) / (size_total_pool - 4)));
-
-        var hero_perc_avail = Math.round(prop_at_least_one * 100);
-
-        if (!champ_tier) {
-            champ_tier = '?';
-        }
-
-        /*END-DRAWSTAT*/ 
-        
-        if (DISPLAY_DRAW_PROB && DISPLAY_TIER) {
-            var template = '<Label text="' + champ_tier + ' (' + hero_in_play + ' / ' + hero_perc_avail + '%)" id="rank_draw_card_' + i + '" style = "font-size: 26px; font-weight: bold; width: 250px; text-align: center; margin-top: 333px; margin-left: 15px; z-index: 600;"/> ';
-        } else if (DISPLAY_DRAW_PROB) {
-            var template = '<Label text="(' + hero_in_play + ' / ' + hero_perc_avail + '%)" id="rank_draw_card_' + i + '" style = "font-size: 26px; font-weight: bold; width: 250px; text-align: center; margin-top: 333px; margin-left: 15px; z-index: 600;"/> ';
-        } else {
-            var template = '<Label text=" " id="rank_draw_card_' + i + '" style = "font-size: 26px; font-weight: bold; width: 250px; text-align: center; margin-top: 333px; margin-left: 15px; z-index: 600;"/> ';
-        }
-
-        if (!find_dota_hud_element('panel_hero_draw_card_' + i).FindChild('rank_draw_card_' + i)) {
-            parentPanel.BCreateChildren(template);
-        } else {
-            if (DISPLAY_DRAW_PROB && DISPLAY_TIER) {
-                find_dota_hud_element('rank_draw_card_' + i).text = champ_tier + ' (' + hero_in_play + ' / ' + hero_perc_avail + '%)';
-            } else if (DISPLAY_DRAW_PROB) {
-                find_dota_hud_element('rank_draw_card_' + i).text = '(' + hero_in_play + ' / ' + hero_perc_avail + '%)';
-            } else {
-                find_dota_hud_element('rank_draw_card_' + i).text = " ";
-            }
-        }
-    }
     
     // Add element to display gold
 
@@ -718,8 +657,77 @@ function OnBattleInfo(data) {
 
 };
 
+function OnShowDrawCard(keys){
+    $.Msg(keys) // {"unlock":1,"curr_money":1,"chesses":{"1":"chess_luna","2":"chess_bh","3":"chess_am","4":"chess_pom","5":"chess_bat"},"cards":"chess_luna,chess_bh,chess_am,chess_pom,chess_bat,","key":467571}
+    
+    var courier_level = Entities.GetLevel(courier_id);
+    /*START-DRAWSTAT*/  
+    
+    hero_counts = getCurrentChamps();
+    var size_total_pool = get_total_size_of_pool(hero_counts, courier_level);
+
+    /*END-DRAWSTAT*/ 
+
+    // Add Tier + Probability
+
+    $.Schedule(0.75, function(){
+        var times = 5;
+        for(var i=0; i < times; i++){
+            var champ_name = find_dota_hud_element('panel_hero_draw_card_' + i).FindChild('text_draw_card_' + i).text.replace('★', '').trim();
+            var champ_tier = tier_dict[champ_name];
+            var parentPanel = find_dota_hud_element('panel_hero_draw_card_' + i);
+            var costPanel = parentPanel.FindChild('text_draw_card_price_' + i);
+            var hero_cost = parseInt(costPanel.text.replace('×', ''));
+            var hero_pool = hero_pool_counts[hero_cost];
+
+            /*START-DRAWSTAT*/  
+
+            if (champ_name in hero_counts) {
+                var hero_in_play = hero_counts[champ_name];
+            } else {
+                var hero_in_play = 0
+            }
+
+            var num_hero_avail = hero_pool - hero_in_play;
+            var num_bad_draws = size_total_pool - num_hero_avail;
+            var prop_at_least_one = 1 - ((num_bad_draws / size_total_pool) * ((num_bad_draws - 1) / (size_total_pool - 1)) * ((num_bad_draws - 2) / (size_total_pool - 2)) * ((num_bad_draws - 3) / (size_total_pool - 3)) * ((num_bad_draws - 4) / (size_total_pool - 4)));
+
+            var hero_perc_avail = Math.round(prop_at_least_one * 100);
+
+            if (!champ_tier) {
+                champ_tier = '?';
+            }
+
+            /*END-DRAWSTAT*/ 
+            
+            if (DISPLAY_DRAW_PROB && DISPLAY_TIER) {
+                var template = '<Label text="' + champ_tier + ' (' + hero_in_play + ' / ' + hero_perc_avail + '%)" id="rank_draw_card_' + i + '" style = "font-size: 26px; font-weight: bold; width: 250px; text-align: center; margin-top: 333px; margin-left: 15px; z-index: 600;"/> ';
+            } else if (DISPLAY_DRAW_PROB) {
+                var template = '<Label text="(' + hero_in_play + ' / ' + hero_perc_avail + '%)" id="rank_draw_card_' + i + '" style = "font-size: 26px; font-weight: bold; width: 250px; text-align: center; margin-top: 333px; margin-left: 15px; z-index: 600;"/> ';
+            } else {
+                var template = '<Label text=" " id="rank_draw_card_' + i + '" style = "font-size: 26px; font-weight: bold; width: 250px; text-align: center; margin-top: 333px; margin-left: 15px; z-index: 600;"/> ';
+            }
+
+            if (!find_dota_hud_element('panel_hero_draw_card_' + i).FindChild('rank_draw_card_' + i)) {
+                parentPanel.BCreateChildren(template);
+            } else {
+                if (DISPLAY_DRAW_PROB && DISPLAY_TIER) {
+                    find_dota_hud_element('rank_draw_card_' + i).text = champ_tier + ' (' + hero_in_play + ' / ' + hero_perc_avail + '%)';
+                } else if (DISPLAY_DRAW_PROB) {
+                    find_dota_hud_element('rank_draw_card_' + i).text = '(' + hero_in_play + ' / ' + hero_perc_avail + '%)';
+                } else {
+                    find_dota_hud_element('rank_draw_card_' + i).text = " ";
+                }
+            }
+        }
+    })
+}
+
+
+
 (function()
-{
+{  
     GameEvents.Subscribe("show_time", OnShowTime);
-    GameEvents.Subscribe( "battle_info", OnBattleInfo );
+    GameEvents.Subscribe( "battle_info", OnBattleInfo);
+    GameEvents.Subscribe( "show_draw_card", OnShowDrawCard );
 })();
