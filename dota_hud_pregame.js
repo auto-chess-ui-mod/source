@@ -2,7 +2,7 @@
 // Custom UI code
 
 (function () {
-	$.Msg( "The Auto Chess custom UI just loaded! ---------------------------------------------------------------------------------------------------------------------" );
+    $.Msg( "The Auto Chess custom UI just loaded! ---------------------------------------------------------------------------------------------------------------------" );
 })();
 
 // Functions
@@ -40,11 +40,12 @@ function getCurrentChamps() {
 
     $.Each(Entities.GetAllEntitiesByClassname('npc_dota_creature'), function(entity) {
         var unit_name = Entities.GetUnitName(entity);
-        if ( !unit_name.match(/chess/) ) {
+        var unit_is_alive = Entities.IsAlive(entity);
+        var unit_team = Entities.GetTeamNumber(entity);
+
+        if ( !unit_name.match(/chess/) || !unit_is_alive ) {
             return;
         }
-
-        var unit_team = Entities.GetTeamNumber(entity);
 
         if ( local_player_team == unit_team ) {
             user_list.push(unit_name);
@@ -90,29 +91,48 @@ function getCurrentChamps() {
 function get_total_size_of_pool(hero_counts_input, courier_level_input) {
     var size_total_pool = 0;
 
-    $.Each(hero_id_list, function(item) {
-        var tmp_ele = find_dota_hud_element(item);
-        if (tmp_ele) {
-            var tmp_cost = hero_dict[item]['cost'];
-            var tmp_hero_pool = hero_pool_counts[tmp_cost];
-            var tmp_threshold = level_thresholds[tmp_cost];
-            var champ_name = hero_dict[item]['name'];
-    
-            if (champ_name in hero_counts_input) {
-                var hero_in_play = hero_counts_input[champ_name];
+    if (first_time) {
+        $.Each(hero_id_list, function(item) {
+            if (hero_not_avail.indexOf(item) >= 0) {
+                //pass 
             } else {
-                var hero_in_play = 0
-            }
+                var tmp_cost = hero_dict[item]['cost'];
+                var tmp_hero_pool = hero_pool_counts[tmp_cost];
+                var tmp_threshold = level_thresholds[tmp_cost];
 
-            if (!courier_level_input) {
                 courier_level_input = 1
+                
+                if (courier_level_input >= tmp_threshold) {
+                    size_total_pool = size_total_pool + tmp_hero_pool;
+                }
             }
-
-            if (courier_level_input >= tmp_threshold) {
-                size_total_pool = size_total_pool + (tmp_hero_pool - hero_in_play);
+        }); 
+    } else {
+        $.Each(hero_id_list, function(item) {
+            var tmp_ele = find_dota_hud_element(item);
+            if (tmp_ele) {
+                var tmp_cost = hero_dict[item]['cost'];
+                var tmp_hero_pool = hero_pool_counts[tmp_cost];
+                var tmp_threshold = level_thresholds[tmp_cost];
+                var champ_name = hero_dict[item]['name'];
+        
+                if (champ_name in hero_counts_input) {
+                    var hero_in_play = hero_counts_input[champ_name];
+                } else {
+                    var hero_in_play = 0
+                }
+    
+                if (!courier_level_input) {
+                    courier_level_input = 1
+                }
+    
+                if (courier_level_input >= tmp_threshold) {
+                    size_total_pool = size_total_pool + (tmp_hero_pool - hero_in_play);
+                } 
             } 
-        } 
-    });
+        });
+    }
+
 
     return size_total_pool; 
 }
@@ -133,20 +153,51 @@ function calculate_draw_prop(champ_input, hero_counts_input, courier_level_input
         courier_level_input = 1
     }
 
+    var perc_color = '#ffffff';
+
     if (courier_level_input >= tmp_threshold) {
         var num_hero_avail = tmp_hero_pool - hero_in_play;
         var num_bad_draws = size_total_pool_input - num_hero_avail;
         var prop_at_least_one = 1 - ((num_bad_draws / size_total_pool_input) * ((num_bad_draws - 1) / (size_total_pool_input - 1)) * ((num_bad_draws - 2) / (size_total_pool_input - 2)) * ((num_bad_draws - 3) / (size_total_pool_input - 3)) * ((num_bad_draws - 4) / (size_total_pool_input - 4)));
+
+        // Prop untounched
+
+        var num_bad_draws_untouched = size_total_pool_input -tmp_hero_pool;
+        var prop_at_least_one_untouched = 1 - ((num_bad_draws_untouched / size_total_pool_input) * ((num_bad_draws_untouched - 1) / (size_total_pool_input - 1)) * ((num_bad_draws_untouched - 2) / (size_total_pool_input - 2)) * ((num_bad_draws_untouched - 3) / (size_total_pool_input - 3)) * ((num_bad_draws_untouched - 4) / (size_total_pool_input - 4)));
+        
+        // Define color
+
+        var pick_dif = prop_at_least_one_untouched - prop_at_least_one;
+
+        if (pick_dif == 0) {
+            perc_color = '#05CA02';
+        } else if (pick_dif <= 0.20) {
+            perc_color = '#2AA401';
+        } else if (pick_dif <= 0.40) {
+            perc_color = '#507E01';
+        } else if (pick_dif <= 0.60) {
+            perc_color = '#765800';
+        } else if (pick_dif <= 0.80) {
+            perc_color = '#9C3200';
+        } else {
+            perc_color = '#C20D00';
+        } 
+
     } else {
         var prop_at_least_one = 0;
     }
 
-    return Math.round(prop_at_least_one * 100 * 10) / 10;        
+
+    var output = Math.round(prop_at_least_one * 100 * 10) / 10;   
+
+    return [output, perc_color]  ;
 }
 
 /*END-DRAWSTAT*/ 
 
 // Data inputs
+
+var hero_not_avail = ['chess_riki', 'chess_kael', 'chess_sk', 'chess_slark', 'chess_sven'];
 
 var eng_to_cn = {
     'Abaddon': '死亡骑士',
@@ -494,8 +545,14 @@ var local_player_team;
 var user_steam_id;
 var courier_id, previous_courier_level, previous_courier_xp;
 var enemies_steam_ids = {};
-var hero_counts = {};
 var first_time = true;
+
+/*START-DRAWSTAT*/  
+
+var hero_counts = {};
+var size_total_pool = get_total_size_of_pool(hero_counts, 1);
+
+/*END-DRAWSTAT*/  
 
 function OnShowTime(keys) {
     if (first_time) {
@@ -522,11 +579,27 @@ function OnShowTime(keys) {
             });
             hero_dict = hero_dict_cn;
 
-            $.Msg(hero_dict)
+            //$.Msg(hero_dict)
 
         } else {
             $.Msg('English client detected')
         }
+
+        /*START-DRAWSTAT*/  
+
+        size_total_pool = get_total_size_of_pool(hero_counts, 1);
+
+        $.Each(hero_id_list, function(item) {
+            var tmp_ele = find_dota_hud_element(item);
+            if (tmp_ele) {
+                var tmp_ret = calculate_draw_prop(item, hero_counts, 1, size_total_pool);
+                var hero_perc_avail = tmp_ret[0];
+                tmp_ele.text = hero_perc_avail + '%';
+                tmp_ele.style['color'] = tmp_ret[1];
+            } 
+        });
+
+        /*END-DRAWSTAT*/  
 
         // Get player info
         local_player_team = Players.GetTeam(Players.GetLocalPlayer());
@@ -585,14 +658,27 @@ function OnShowTime(keys) {
 
 function OnBattleInfo(data) {
     var cur_round = data.round;
+    var courier_level_round = Entities.GetLevel(courier_id);
 
-    /*
-    if (!find_dota_hud_element('minimap_container').FindChild('round_warn_text')) {
-        var parentPanelPortrait = find_dota_hud_element('minimap_container');
-        var template_round_warn = '<Label text=" " id="round_warn_text" style="font-size: 35px; font-weight: bold; margin-left: 265px; margin-top: 220px; color: red;"/>';
-        parentPanelPortrait.BCreateChildren(template_round_warn);     
-    } 
-    */
+    /*START-DRAWSTAT*/  
+
+    if (cur_round > 0 && data.type != 'prepare') {
+        hero_counts = getCurrentChamps();
+        size_total_pool = get_total_size_of_pool(hero_counts, courier_level_round);
+
+        $.Each(hero_id_list, function(item) {
+            var tmp_ele = find_dota_hud_element(item);
+            if (tmp_ele) {
+                var tmp_ret = calculate_draw_prop(item, hero_counts, courier_level_round, size_total_pool);
+                var hero_perc_avail = tmp_ret[0];
+                tmp_ele.text = hero_perc_avail + '%';
+                tmp_ele.style['color'] = tmp_ret[1];
+            } 
+        });
+
+    }
+
+    /*END-DRAWSTAT*/ 
 
     if (!find_dota_hud_element('CustomUIContainer_Hud').FindChild('pve_warning')) {
         find_dota_hud_element('winstreak').style['width'] = '100%';
@@ -602,10 +688,6 @@ function OnBattleInfo(data) {
     }
 
     if (cur_round in round_descriptions) {
-        /*
-        find_dota_hud_element('minimap_container').FindChild('round_warn_text').text = 'Now: ' + round_descriptions[cur_round];
-        find_dota_hud_element('minimap_container').FindChild('round_warn_text').style['color'] = 'red';
-        */
 
         if (cur_round > 3 && data.type == 'prepare') {
             var pve_warning_ele = find_dota_hud_element('pve_warning');
@@ -630,49 +712,62 @@ function OnBattleInfo(data) {
     } else {
         find_dota_hud_element('pve_warning').SetHasClass('invisible',true);
         find_dota_hud_element('pve_warning').text = '';
-        //find_dota_hud_element('minimap_container').FindChild('round_warn_text').text = 'Now: ' + 'PvP';
-        //find_dota_hud_element('minimap_container').FindChild('round_warn_text').style['color'] = 'green';
     }
-
-    // Add probabilities to list
-
-    /*START-DRAWSTAT*/  
-
-    if (cur_round > 0) {
-        var hero_counts_round = getCurrentChamps();
-        var courier_level_round = Entities.GetLevel(courier_id);
-        var size_total_pool_round = get_total_size_of_pool(hero_counts_round, courier_level_round);
-    
-        $.Each(hero_id_list, function(item) {
-            var tmp_ele = find_dota_hud_element(item);
-            if (tmp_ele) {
-                var hero_perc_avail = calculate_draw_prop(item, hero_counts_round, courier_level_round, size_total_pool_round);
-                tmp_ele.text = hero_perc_avail + '%';
-            } 
-        });
-    }
-
-    /*END-DRAWSTAT*/  
-
 
 };
 
 function OnShowDrawCard(keys){
-    $.Msg(keys) // {"unlock":1,"curr_money":1,"chesses":{"1":"chess_luna","2":"chess_bh","3":"chess_am","4":"chess_pom","5":"chess_bat"},"cards":"chess_luna,chess_bh,chess_am,chess_pom,chess_bat,","key":467571}
     
     var courier_level = Entities.GetLevel(courier_id);
-    /*START-DRAWSTAT*/  
-    
-
-
-    /*END-DRAWSTAT*/ 
 
     // Add Tier + Probability
 
     $.Schedule(0.75, function(){
-        var hero_counts_draw = getCurrentChamps();
-        var size_total_pool = get_total_size_of_pool(hero_counts_draw, courier_level);
+
+        // Debug
+
+        /*
+
+        var debug_list = [];
+
+        $.Each(Entities.GetAllEntitiesByClassname('npc_dota_creature'), function(entity) {
+            var unit_name = Entities.GetUnitName(entity);
+            //var unit_owner = Entities.GetPlayerOwnerID(entity)
+            //var unit_team = Entities.GetTeamNumber(entity)
+            //var unit_is_controllable = Entities.IsControllableByPlayer(entity, Game.GetLocalPlayerID())
+            //var unit_is_controllabel_by_any_player = Entities.IsControllableByAnyPlayer(entity)
+            var unit_is_alive = Entities.IsAlive(entity)
+            if ( !unit_name.match(/chess/) || !unit_is_alive ) {
+                return;
+            }
+
+            //debug_list.push([entity, unit_name, unit_owner, unit_team, unit_is_controllable, unit_is_alive, unit_is_controllabel_by_any_player, unit_is_invisible])
+            debug_list.push(unit_name)
+
+        });
+
+        $.Msg(debug_list)
         
+        */
+
+        /*START-DRAWSTAT*/  
+
+        // Update list
+
+        $.Each(hero_id_list, function(item) {
+            var tmp_ele = find_dota_hud_element(item);
+            if (tmp_ele) {
+                var tmp_ret = calculate_draw_prop(item, hero_counts, courier_level, size_total_pool);
+                var hero_perc_avail = tmp_ret[0];
+                tmp_ele.text = hero_perc_avail + '%';
+                tmp_ele.style['color'] = tmp_ret[1];
+            } 
+        });
+
+        //$.Msg(hero_counts)
+
+        /*END-DRAWSTAT*/ 
+
         var times = 5;
         for(var i=0; i < times; i++){
             var champ_name = find_dota_hud_element('panel_hero_draw_card_' + i).FindChild('text_draw_card_' + i).text.replace('★', '').trim();
@@ -684,8 +779,8 @@ function OnShowDrawCard(keys){
 
             /*START-DRAWSTAT*/  
 
-            if (champ_name in hero_counts_draw) {
-                var hero_in_play = hero_counts_draw[champ_name];
+            if (champ_name in hero_counts) {
+                var hero_in_play = hero_counts[champ_name];
             } else {
                 var hero_in_play = 0
             }
