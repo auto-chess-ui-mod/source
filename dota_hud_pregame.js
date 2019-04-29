@@ -561,7 +561,7 @@ var cost_draw_probs_by_level = {
 
 var local_player_team;
 var user_steam_id;
-var courier_id, previous_courier_level, previous_courier_xp;
+var courier_id, courier_player_id, previous_courier_xp_to_level, previous_courier_gold;
 var enemies_steam_ids = {};
 var first_time = true;
 
@@ -622,6 +622,7 @@ function OnShowTime(keys) {
         // Get player info
         local_player_team = Players.GetTeam(Players.GetLocalPlayer());
         user_steam_id = Game.GetPlayerInfo(Players.GetLocalPlayer()).player_steamid;
+        courier_player_id = Game.GetPlayerInfo(Players.GetLocalPlayer()).player_id;
         $.Msg('Steam ID:')
         $.Msg(user_steam_id)
 
@@ -660,18 +661,6 @@ function OnShowTime(keys) {
         first_time = false;
 
     }
-    
-    // Add element to display gold
-
-    var courier_level = Entities.GetLevel(courier_id);
-    var courier_xp = Entities.GetNeededXPToLevel(courier_id) - Entities.GetCurrentXP(courier_id);
-    if ( courier_level != previous_courier_level || courier_xp != previous_courier_xp ) {
-        previous_courier_level = courier_level;
-        previous_courier_xp = courier_xp;
-    }
-
-    find_dota_hud_element('minimap_container').FindChild('gold_text').text = courier_xp + 'xp (' + Math.ceil(courier_xp/4)*5 + ' gold) for lvl up';
-
 }
 
 function OnBattleInfo(data) {
@@ -730,6 +719,14 @@ function OnBattleInfo(data) {
     } else {
         find_dota_hud_element('pve_warning').SetHasClass('invisible',true);
         find_dota_hud_element('pve_warning').text = '';
+    }
+
+    //at the start of a round the XP will have increased
+    if (data.type == 'prepare' && !first_time) {
+        //need a small delay because battle_info fires just before the XP is changed on the client
+        $.Schedule(1, function() {
+            UpdateXPGoldText();
+        });
     }
 
 };
@@ -848,11 +845,34 @@ function OnShowDrawCard(keys){
     })
 }
 
+//In reality this method is called every time a player's HP or Gold changes (mp for gold)
+function OnSyncHp(data) {
+    var current_gold = Math.round(data.mp);
+
+    if (data.player_id == courier_player_id && current_gold != previous_courier_gold) {
+        //if someone has spent 5 gold they have either leveled or bought a 5 cost unit
+        if (current_gold == previous_courier_gold - 5) {
+            UpdateXPGoldText();
+        }
+
+        previous_courier_gold = current_gold;
+    }
+}
+
+function UpdateXPGoldText() {
+    var courier_xp_to_level = Entities.GetNeededXPToLevel(courier_id) - Entities.GetCurrentXP(courier_id);
+
+    if (previous_courier_xp_to_level != courier_xp_to_level) {
+        previous_courier_xp_to_level = courier_xp_to_level;
+        find_dota_hud_element('minimap_container').FindChild('gold_text').text = courier_xp_to_level + 'xp (' + Math.ceil(courier_xp_to_level/4)*5 + ' gold) for lvl up';
+    }
+}
 
 
 (function()
 {  
     GameEvents.Subscribe("show_time", OnShowTime);
-    GameEvents.Subscribe( "battle_info", OnBattleInfo);
-    GameEvents.Subscribe( "show_draw_card", OnShowDrawCard );
+    GameEvents.Subscribe("battle_info", OnBattleInfo);
+    GameEvents.Subscribe("show_draw_card", OnShowDrawCard);
+    GameEvents.Subscribe("sync_hp", OnSyncHp);
 })();
