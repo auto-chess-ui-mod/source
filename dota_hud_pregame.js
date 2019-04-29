@@ -5,6 +5,15 @@
     $.Msg( "The Auto Chess custom UI just loaded! ---------------------------------------------------------------------------------------------------------------------" );
 })();
 
+// Params
+
+var DISPLAY_TIER = true;
+var DISPLAY_DRAW_PROB = true;
+
+// Userful data
+
+var color_gradient = ["#05ef14","#0aee13","#0fec13","#14ea13","#19e912","#1ee712","#23e512","#28e411","#2ce211","#31e010","#36df10","#3bdd10","#40db0f","#45da0f","#4ad80f","#4fd60e","#54d50e","#59d30e","#5ed10d","#63d00d","#68ce0d","#6dcc0c","#72cb0c","#77c90c","#7cc70b","#80c60b","#85c40a","#8ac20a","#8fc10a","#94bf09","#99bd09","#9ebc09","#a3ba08","#a8b808","#adb708","#b2b507","#b7b307","#bcb207","#c1b006","#c6ae06","#cbad06","#d0ab05","#d4a905","#d9a804","#dea604","#e3a404","#e8a303","#eda103","#f29f03","#f79e02","#fc9902","#fc9602","#fb9302","#fb9002","#fb8d02","#fb8a02","#fb8702","#fa8402","#fa8102","#fa7e02","#fa7b02","#fa7802","#fa7502","#f97201","#f96f01","#f96c01","#f96901","#f96601","#f86301","#f86001","#f85d01","#f85a01","#f85701","#f75401","#f75101","#f74e01","#f74b01","#f74801","#f64501","#f64201","#f63f01","#f63c01","#f63901","#f53601","#f53301","#f53001","#f52d01","#f52a01","#f52701","#f42400","#f42100","#f41e00","#f41b00","#f41800","#f31500","#f31200","#f30f00","#f30c00","#f30900","#f20600","#f20300"];
+
 // Functions
 
 function find_dota_hud_element(id){
@@ -19,6 +28,10 @@ function find_dota_hud_element(id){
 
 function isInArray(value, array) {
     return array.indexOf(value) > -1;
+}
+
+function add(accumulator, a) {
+    return accumulator + a;
 }
 
 /*START-DRAWSTAT*/  
@@ -89,7 +102,7 @@ function getCurrentChamps() {
 };
 
 function get_total_size_of_pool(hero_counts_input, courier_level_input) {
-    var size_total_pool = 0;
+    var size_cost_pool = {1 : 0, 2 : 0, 3 : 0, 4 : 0, 5 : 0}
 
     if (first_time) {
         $.Each(hero_id_list, function(item) {
@@ -98,13 +111,15 @@ function get_total_size_of_pool(hero_counts_input, courier_level_input) {
             } else {
                 var tmp_cost = hero_dict[item]['cost'];
                 var tmp_hero_pool = hero_pool_counts[tmp_cost];
-                var tmp_threshold = level_thresholds[tmp_cost];
 
-                courier_level_input = 1
-                
+                /*
+                var tmp_threshold = level_thresholds[tmp_cost];
+                courier_level_input = 1;
                 if (courier_level_input >= tmp_threshold) {
-                    size_total_pool = size_total_pool + tmp_hero_pool;
+                    size_cost_pool[tmp_cost] = size_cost_pool[tmp_cost] + tmp_hero_pool;
                 }
+                */
+                size_cost_pool[tmp_cost] = size_cost_pool[tmp_cost] + tmp_hero_pool;
             }
         }); 
     } else {
@@ -113,7 +128,6 @@ function get_total_size_of_pool(hero_counts_input, courier_level_input) {
             if (tmp_ele) {
                 var tmp_cost = hero_dict[item]['cost'];
                 var tmp_hero_pool = hero_pool_counts[tmp_cost];
-                var tmp_threshold = level_thresholds[tmp_cost];
                 var champ_name = hero_dict[item]['name'];
         
                 if (champ_name in hero_counts_input) {
@@ -121,27 +135,37 @@ function get_total_size_of_pool(hero_counts_input, courier_level_input) {
                 } else {
                     var hero_in_play = 0
                 }
-    
+
+                /*
+                var tmp_threshold = level_thresholds[tmp_cost];
+
                 if (!courier_level_input) {
                     courier_level_input = 1
                 }
-    
+
                 if (courier_level_input >= tmp_threshold) {
-                    size_total_pool = size_total_pool + (tmp_hero_pool - hero_in_play);
-                } 
+                    size_cost_pool[tmp_cost] = size_cost_pool[tmp_cost] + (tmp_hero_pool - hero_in_play);
+                }
+                */
+                size_cost_pool[tmp_cost] = size_cost_pool[tmp_cost] + (tmp_hero_pool - hero_in_play);
             } 
         });
     }
 
 
-    return size_total_pool; 
+    return size_cost_pool; //size_total_pool
 }
 
-function calculate_draw_prop(champ_input, hero_counts_input, courier_level_input, size_total_pool_input) {
+function calculate_draw_prop(champ_input, hero_counts_input, courier_level_input, size_cost_pool_input) {
+    if (!courier_level_input) {
+        courier_level_input = 1
+    }
+
+    var champ_name = hero_dict[champ_input]['name'];
     var tmp_cost = hero_dict[champ_input]['cost'];
     var tmp_hero_pool = hero_pool_counts[tmp_cost];
-    var tmp_threshold = level_thresholds[tmp_cost];
-    var champ_name = hero_dict[champ_input]['name'];
+
+    var size_hero_cost_pool = size_cost_pool_input[tmp_cost];
 
     if (champ_name in hero_counts_input) {
         var hero_in_play = hero_counts_input[champ_name];
@@ -149,44 +173,27 @@ function calculate_draw_prop(champ_input, hero_counts_input, courier_level_input
         var hero_in_play = 0
     }
 
-    if (!courier_level_input) {
-        courier_level_input = 1
-    }
+    var num_hero_avail = tmp_hero_pool - hero_in_play;
+    var num_bad_draws = size_hero_cost_pool - num_hero_avail;
+
+    var good_cost_prob = cost_draw_probs_by_level[courier_level_input][tmp_cost];
+    var bad_cost_prob = 1 - good_cost_prob;
+
+    var prop_at_least_one = 1 - ((bad_cost_prob + (good_cost_prob * (num_bad_draws / size_hero_cost_pool))) * 
+                                (bad_cost_prob + (good_cost_prob * ((num_bad_draws - 1) / (size_hero_cost_pool - 1)))) * 
+                                (bad_cost_prob + (good_cost_prob * ((num_bad_draws - 2) / (size_hero_cost_pool - 2)))) * 
+                                (bad_cost_prob + (good_cost_prob * ((num_bad_draws - 3) / (size_hero_cost_pool - 3)))) * 
+                                (bad_cost_prob + (good_cost_prob * ((num_bad_draws - 4) / (size_hero_cost_pool - 4)))));
+
+    // Define color
 
     var perc_color = '#ffffff';
 
-    if (courier_level_input >= tmp_threshold) {
-        var num_hero_avail = tmp_hero_pool - hero_in_play;
-        var num_bad_draws = size_total_pool_input - num_hero_avail;
-        var prop_at_least_one = 1 - ((num_bad_draws / size_total_pool_input) * ((num_bad_draws - 1) / (size_total_pool_input - 1)) * ((num_bad_draws - 2) / (size_total_pool_input - 2)) * ((num_bad_draws - 3) / (size_total_pool_input - 3)) * ((num_bad_draws - 4) / (size_total_pool_input - 4)));
+    //var simple_prob = good_cost_prob * (num_hero_avail / size_hero_cost_pool);
+    //var naive_prob = num_hero_avail / size_hero_cost_pool;
 
-        // Prop untounched
-
-        var num_bad_draws_untouched = size_total_pool_input -tmp_hero_pool;
-        var prop_at_least_one_untouched = 1 - ((num_bad_draws_untouched / size_total_pool_input) * ((num_bad_draws_untouched - 1) / (size_total_pool_input - 1)) * ((num_bad_draws_untouched - 2) / (size_total_pool_input - 2)) * ((num_bad_draws_untouched - 3) / (size_total_pool_input - 3)) * ((num_bad_draws_untouched - 4) / (size_total_pool_input - 4)));
-        
-        // Define color
-
-        var pick_dif = prop_at_least_one_untouched - prop_at_least_one;
-
-        if (pick_dif == 0) {
-            perc_color = '#05CA02';
-        } else if (pick_dif <= 0.20) {
-            perc_color = '#2AA401';
-        } else if (pick_dif <= 0.40) {
-            perc_color = '#507E01';
-        } else if (pick_dif <= 0.60) {
-            perc_color = '#765800';
-        } else if (pick_dif <= 0.80) {
-            perc_color = '#9C3200';
-        } else {
-            perc_color = '#C20D00';
-        } 
-
-    } else {
-        var prop_at_least_one = 0;
-    }
-
+    //var perc_used_up = Math.round(naive_prob*100);
+    //perc_color = color_gradient[perc_used_up];
 
     var output = Math.round(prop_at_least_one * 100 * 10) / 10;   
 
@@ -535,11 +542,22 @@ for (var key in hero_dict) {
     }
 }
 
-var DISPLAY_TIER = true;
-var DISPLAY_DRAW_PROB = true;
-
 var hero_pool_counts = {1 : 45, 2 : 30, 3 : 25, 4 : 15, 5 : 10};
+
 var level_thresholds = {1 : 1, 2 : 2, 3 : 3, 4 : 5, 5 : 8};
+
+var cost_draw_probs_by_level = {
+    1 : {1 : 1, 2 : 0, 3 : 0, 4 : 0, 5 : 0},
+    2 : {1 : 0.70, 2 : 0.30, 3 : 0, 4 : 0, 5 : 0},
+    3 : {1 : 0.60, 2 : 0.35, 3 : 0.05, 4 : 0, 5 : 0},
+    4 : {1 : 0.50, 2 : 0.35, 3 : 0.15, 4 : 0, 5 : 0},
+    5 : {1 : 0.40, 2 : 0.35, 3 : 0.23, 4 : 0.02, 5 : 0},
+    6 : {1 : 0.33, 2 : 0.30, 3 : 0.30, 4 : 0.07, 5 : 0},
+    7 : {1 : 0.30, 2 : 0.30, 3 : 0.30, 4 : 0.10, 5 : 0},
+    8 : {1 : 0.24, 2 : 0.30, 3 : 0.30, 4 : 0.15, 5 : 0.01},
+    9 : {1 : 0.22, 2 : 0.30, 3 : 0.25, 4 : 0.20, 5 : 0.03},
+    10 : {1 : 0.19, 2 : 0.25, 3 : 0.25, 4 : 0.25, 5 : 0.06},
+};
 
 var local_player_team;
 var user_steam_id;
@@ -550,7 +568,7 @@ var first_time = true;
 /*START-DRAWSTAT*/  
 
 var hero_counts = {};
-var size_total_pool = get_total_size_of_pool(hero_counts, 1);
+var size_cost_pool = get_total_size_of_pool(hero_counts, 1);
 
 /*END-DRAWSTAT*/  
 
@@ -587,12 +605,12 @@ function OnShowTime(keys) {
 
         /*START-DRAWSTAT*/  
 
-        size_total_pool = get_total_size_of_pool(hero_counts, 1);
+        size_cost_pool = get_total_size_of_pool(hero_counts, 1);
 
         $.Each(hero_id_list, function(item) {
             var tmp_ele = find_dota_hud_element(item);
             if (tmp_ele) {
-                var tmp_ret = calculate_draw_prop(item, hero_counts, 1, size_total_pool);
+                var tmp_ret = calculate_draw_prop(item, hero_counts, 1, size_cost_pool);
                 var hero_perc_avail = tmp_ret[0];
                 tmp_ele.text = hero_perc_avail + '%';
                 tmp_ele.style['color'] = tmp_ret[1];
@@ -664,12 +682,12 @@ function OnBattleInfo(data) {
 
     if (cur_round > 0 && data.type != 'prepare') {
         hero_counts = getCurrentChamps();
-        size_total_pool = get_total_size_of_pool(hero_counts, courier_level_round);
+        size_cost_pool = get_total_size_of_pool(hero_counts, courier_level_round);
 
         $.Each(hero_id_list, function(item) {
             var tmp_ele = find_dota_hud_element(item);
             if (tmp_ele) {
-                var tmp_ret = calculate_draw_prop(item, hero_counts, courier_level_round, size_total_pool);
+                var tmp_ret = calculate_draw_prop(item, hero_counts, courier_level_round, size_cost_pool);
                 var hero_perc_avail = tmp_ret[0];
                 tmp_ele.text = hero_perc_avail + '%';
                 tmp_ele.style['color'] = tmp_ret[1];
@@ -757,7 +775,7 @@ function OnShowDrawCard(keys){
         $.Each(hero_id_list, function(item) {
             var tmp_ele = find_dota_hud_element(item);
             if (tmp_ele) {
-                var tmp_ret = calculate_draw_prop(item, hero_counts, courier_level, size_total_pool);
+                var tmp_ret = calculate_draw_prop(item, hero_counts, courier_level, size_cost_pool);
                 var hero_perc_avail = tmp_ret[0];
                 tmp_ele.text = hero_perc_avail + '%';
                 tmp_ele.style['color'] = tmp_ret[1];
@@ -785,9 +803,19 @@ function OnShowDrawCard(keys){
                 var hero_in_play = 0
             }
 
+            var size_hero_cost_pool = size_cost_pool[hero_cost];
+        
             var num_hero_avail = hero_pool - hero_in_play;
-            var num_bad_draws = size_total_pool - num_hero_avail;
-            var prop_at_least_one = 1 - ((num_bad_draws / size_total_pool) * ((num_bad_draws - 1) / (size_total_pool - 1)) * ((num_bad_draws - 2) / (size_total_pool - 2)) * ((num_bad_draws - 3) / (size_total_pool - 3)) * ((num_bad_draws - 4) / (size_total_pool - 4)));
+            var num_bad_draws = size_hero_cost_pool - num_hero_avail;
+        
+            var good_cost_prob = cost_draw_probs_by_level[courier_level][hero_cost];
+            var bad_cost_prob = 1 - good_cost_prob;
+        
+            var prop_at_least_one = 1 - ((bad_cost_prob + (good_cost_prob * (num_bad_draws / size_hero_cost_pool))) * 
+                                        (bad_cost_prob + (good_cost_prob * ((num_bad_draws - 1) / (size_hero_cost_pool - 1)))) * 
+                                        (bad_cost_prob + (good_cost_prob * ((num_bad_draws - 2) / (size_hero_cost_pool - 2)))) * 
+                                        (bad_cost_prob + (good_cost_prob * ((num_bad_draws - 3) / (size_hero_cost_pool - 3)))) * 
+                                        (bad_cost_prob + (good_cost_prob * ((num_bad_draws - 4) / (size_hero_cost_pool - 4)))));
 
             var hero_perc_avail = Math.round(prop_at_least_one * 100);
 

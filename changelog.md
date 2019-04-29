@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+##  2019-04-29   
+### Changed
+- Temporarily disabled the probability colors untill I figure out the right way to display the relative probability  
+- Re-implemented the probability calculation to be more accurate, it now simulates the actual draw algorithm
+
 ##  2019-04-26 
 ### Added
 - Percentages in the hero list are now color coded depending on their relative availability (green to red)
