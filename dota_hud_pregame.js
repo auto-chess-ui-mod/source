@@ -112,13 +112,6 @@ function get_total_size_of_pool(hero_counts_input, courier_level_input) {
                 var tmp_cost = hero_dict[item]['cost'];
                 var tmp_hero_pool = hero_pool_counts[tmp_cost];
 
-                /*
-                var tmp_threshold = level_thresholds[tmp_cost];
-                courier_level_input = 1;
-                if (courier_level_input >= tmp_threshold) {
-                    size_cost_pool[tmp_cost] = size_cost_pool[tmp_cost] + tmp_hero_pool;
-                }
-                */
                 size_cost_pool[tmp_cost] = size_cost_pool[tmp_cost] + tmp_hero_pool;
             }
         }); 
@@ -136,17 +129,6 @@ function get_total_size_of_pool(hero_counts_input, courier_level_input) {
                     var hero_in_play = 0
                 }
 
-                /*
-                var tmp_threshold = level_thresholds[tmp_cost];
-
-                if (!courier_level_input) {
-                    courier_level_input = 1
-                }
-
-                if (courier_level_input >= tmp_threshold) {
-                    size_cost_pool[tmp_cost] = size_cost_pool[tmp_cost] + (tmp_hero_pool - hero_in_play);
-                }
-                */
                 size_cost_pool[tmp_cost] = size_cost_pool[tmp_cost] + (tmp_hero_pool - hero_in_play);
             } 
         });
@@ -739,32 +721,6 @@ function OnShowDrawCard(keys){
 
     $.Schedule(0.75, function(){
 
-        // Debug
-
-        /*
-
-        var debug_list = [];
-
-        $.Each(Entities.GetAllEntitiesByClassname('npc_dota_creature'), function(entity) {
-            var unit_name = Entities.GetUnitName(entity);
-            //var unit_owner = Entities.GetPlayerOwnerID(entity)
-            //var unit_team = Entities.GetTeamNumber(entity)
-            //var unit_is_controllable = Entities.IsControllableByPlayer(entity, Game.GetLocalPlayerID())
-            //var unit_is_controllabel_by_any_player = Entities.IsControllableByAnyPlayer(entity)
-            var unit_is_alive = Entities.IsAlive(entity)
-            if ( !unit_name.match(/chess/) || !unit_is_alive ) {
-                return;
-            }
-
-            //debug_list.push([entity, unit_name, unit_owner, unit_team, unit_is_controllable, unit_is_alive, unit_is_controllabel_by_any_player, unit_is_invisible])
-            debug_list.push(unit_name)
-
-        });
-
-        $.Msg(debug_list)
-        
-        */
-
         /*START-DRAWSTAT*/  
 
         // Update list
@@ -778,8 +734,6 @@ function OnShowDrawCard(keys){
                 tmp_ele.style['color'] = tmp_ret[1];
             } 
         });
-
-        //$.Msg(hero_counts)
 
         /*END-DRAWSTAT*/ 
 
