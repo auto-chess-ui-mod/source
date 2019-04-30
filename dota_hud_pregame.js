@@ -102,9 +102,10 @@ function getCurrentChamps() {
 };
 
 function get_total_size_of_pool(hero_counts_input, courier_level_input) {
-    var size_cost_pool = {1 : 0, 2 : 0, 3 : 0, 4 : 0, 5 : 0}
+    var size_cost_pool = {1 : 0, 2 : 0, 3 : 0, 4 : 0, 5 : 0};
 
     if (first_time) {
+        size_cost_pool_max = {1 : 0, 2 : 0, 3 : 0, 4 : 0, 5 : 0};
         $.Each(hero_id_list, function(item) {
             if (hero_not_avail.indexOf(item) >= 0 || hero_out_of_pool.indexOf(item) >= 0) {
                 //pass 
@@ -113,6 +114,9 @@ function get_total_size_of_pool(hero_counts_input, courier_level_input) {
                 var tmp_hero_pool = hero_pool_counts[tmp_cost];
 
                 size_cost_pool[tmp_cost] = size_cost_pool[tmp_cost] + tmp_hero_pool;
+
+                // add to max pool
+                size_cost_pool_max[tmp_cost] = size_cost_pool_max[tmp_cost] + tmp_hero_pool;
             }
         }); 
     } else {
@@ -171,16 +175,49 @@ function calculate_draw_prop(champ_input, hero_counts_input, courier_level_input
 
     var perc_color = '#ffffff';
 
-    //var simple_prob = good_cost_prob * (num_hero_avail / size_hero_cost_pool);
-    //var naive_prob = num_hero_avail / size_hero_cost_pool;
+    // Color pallettes:
 
-    //var perc_used_up = Math.round(naive_prob*100);
-    //perc_color = color_gradient[perc_used_up];
+    var c_p_dict = {'blue' : ['#3bbe2c', '#2ca158', '#1e8483', '#0f67af', '#004adb'], 'red' : ['#62b70c', '#7a9219', '#936e25', '#ab4932', '#c3253e']};
+    var c_green = '#4adb00'
+
+
+    var color_list;
+
+    var cost_max_pool = size_cost_pool_max[tmp_cost];
+    var base_perc = tmp_hero_pool / cost_max_pool;
+    var naive_perc = num_hero_avail / size_hero_cost_pool;
+    var dif_perc = naive_perc - base_perc;
+
+    //$.Msg(champ_name, ' ', cost_max_pool, ' ', base_perc, ' ', naive_perc, ' ', tmp_hero_pool, ' ', num_hero_avail, ' ', size_hero_cost_pool, ' ', cost_max_pool)
+
+    if (dif_perc == 0) {
+        perc_color = c_green;
+    } else {
+        if (dif_perc > 0) {
+            color_list = 'blue'
+        } else {
+            color_list = 'red'
+        }
+        var abs_dif = Math.abs(dif_perc) / base_perc;
+
+        if (abs_dif <= 0.2) {
+            perc_color = c_p_dict[color_list][0];
+        } else if (abs_dif <= 0.4) {
+            perc_color = c_p_dict[color_list][1];
+        } else if (abs_dif <= 0.6) {
+            perc_color = c_p_dict[color_list][2];
+        } else if (abs_dif <= 0.8) {
+            perc_color = c_p_dict[color_list][3];
+        } else {
+            perc_color = c_p_dict[color_list][4];
+        }
+    }
 
     var output = Math.round(prop_at_least_one * 100 * 10) / 10;   
 
     if (champ_name == 'Io') {
-        output = 0.3;
+        output = 1.5;
+        perc_color ='#ffffff';
     }
 
     return [output, perc_color]  ;
@@ -192,6 +229,8 @@ function calculate_draw_prop(champ_input, hero_counts_input, courier_level_input
 
 var hero_not_avail = ['chess_riki', 'chess_kael', 'chess_sk', 'chess_slark', 'chess_sven', 'chess_lich'];
 var hero_out_of_pool = ['chess_io'];
+
+var size_cost_pool_max = {1 : 0, 2 : 0, 3 : 0, 4 : 0, 5 : 0}
 
 var eng_to_cn = {
     'Abaddon': '死亡骑士',
@@ -787,7 +826,7 @@ function OnShowDrawCard(keys){
             var hero_perc_avail = Math.round(prop_at_least_one * 100);
 
             if (champ_name == 'Io') {
-                hero_perc_avail = 0.3;
+                hero_perc_avail = 1.5;
             }
 
             /*END-DRAWSTAT*/ 
@@ -845,4 +884,5 @@ function UpdateXPGoldText() {
     GameEvents.Subscribe("battle_info", OnBattleInfo);
     GameEvents.Subscribe("show_draw_card", OnShowDrawCard);
     GameEvents.Subscribe("sync_hp", OnSyncHp);
+
 })();

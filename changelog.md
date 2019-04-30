@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ##  2019-04-30  
 ### Added
+- Added back modified version of color coding the percentages. 
+
+##  2019-04-30  
+### Added
 - Added code for Io and Dazzle  
 
 ### Changed
