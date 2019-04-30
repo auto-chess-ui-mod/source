@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+##  2019-04-30  
+### Added
+- Added code for Io and Dazzle  
+
+### Changed
+- Removed Lich from pool  
+- Merged optimiziation by user [boingy](https://github.com/boingy)
+
 ##  2019-04-29   
 ### Changed
 - Temporarily disabled the probability colors untill I figure out the right way to display the relative probability  

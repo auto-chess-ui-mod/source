@@ -106,7 +106,7 @@ function get_total_size_of_pool(hero_counts_input, courier_level_input) {
 
     if (first_time) {
         $.Each(hero_id_list, function(item) {
-            if (hero_not_avail.indexOf(item) >= 0) {
+            if (hero_not_avail.indexOf(item) >= 0 || hero_out_of_pool.indexOf(item) >= 0) {
                 //pass 
             } else {
                 var tmp_cost = hero_dict[item]['cost'];
@@ -118,7 +118,7 @@ function get_total_size_of_pool(hero_counts_input, courier_level_input) {
     } else {
         $.Each(hero_id_list, function(item) {
             var tmp_ele = find_dota_hud_element(item);
-            if (tmp_ele) {
+            if (tmp_ele && hero_out_of_pool.indexOf(item) == -1) {
                 var tmp_cost = hero_dict[item]['cost'];
                 var tmp_hero_pool = hero_pool_counts[tmp_cost];
                 var champ_name = hero_dict[item]['name'];
@@ -179,6 +179,10 @@ function calculate_draw_prop(champ_input, hero_counts_input, courier_level_input
 
     var output = Math.round(prop_at_least_one * 100 * 10) / 10;   
 
+    if (champ_name == 'Io') {
+        output = 0.3;
+    }
+
     return [output, perc_color]  ;
 }
 
@@ -186,7 +190,8 @@ function calculate_draw_prop(champ_input, hero_counts_input, courier_level_input
 
 // Data inputs
 
-var hero_not_avail = ['chess_riki', 'chess_kael', 'chess_sk', 'chess_slark', 'chess_sven'];
+var hero_not_avail = ['chess_riki', 'chess_kael', 'chess_sk', 'chess_slark', 'chess_sven', 'chess_lich'];
+var hero_out_of_pool = ['chess_io'];
 
 var eng_to_cn = {
     'Abaddon': '死亡骑士',
@@ -208,6 +213,7 @@ var eng_to_cn = {
     'Enigma': '谜团',
     'Furion': '先知',
     'Gyrocopter': '矮人直升机',
+    'Io' : '精灵守卫',
     'Juggernaut': '剑圣',
     'Keeper of the Light': '光之守卫',
     'Kunkka': '海军上将',
@@ -339,6 +345,9 @@ var hero_dict = {'chess_abaddon': {'cost': 3, 'level': 1, 'name': 'Abaddon'},
 'chess_cm': {'cost': 2, 'level': 1, 'name': 'Crystal Maiden'},
 'chess_cm1': {'cost': 2, 'level': 2, 'name': 'Crystal Maiden'},
 'chess_cm11': {'cost': 2, 'level': 3, 'name': 'Crystal Maiden'},
+'chess_dazzle': {'cost': 3, 'level': 1, 'name': 'Dazzle'},
+'chess_dazzle1': {'cost': 3, 'level': 2, 'name': 'Dazzle'},
+'chess_dazzle11': {'cost': 3, 'level': 3, 'name': 'Dazzle'},
 'chess_disruptor': {'cost': 4, 'level': 1, 'name': 'Disruptor'},
 'chess_disruptor1': {'cost': 4, 'level': 2, 'name': 'Disruptor'},
 'chess_disruptor11': {'cost': 4, 'level': 3, 'name': 'Disruptor'},
@@ -369,6 +378,9 @@ var hero_dict = {'chess_abaddon': {'cost': 3, 'level': 1, 'name': 'Abaddon'},
 'chess_gyro': {'cost': 5, 'level': 1, 'name': 'Gyrocopter'},
 'chess_gyro1': {'cost': 5, 'level': 2, 'name': 'Gyrocopter'},
 'chess_gyro11': {'cost': 5, 'level': 3, 'name': 'Gyrocopter'},
+'chess_io': {'cost': 5, 'level': 1, 'name': 'Io'},
+'chess_io1': {'cost': 5, 'level': 2, 'name': 'Io'},
+'chess_io11': {'cost': 5, 'level': 3, 'name': 'Io'},
 'chess_jugg': {'cost': 2, 'level': 1, 'name': 'Juggernaut'},
 'chess_jugg1': {'cost': 2, 'level': 2, 'name': 'Juggernaut'},
 'chess_jugg11': {'cost': 2, 'level': 3, 'name': 'Juggernaut'},
@@ -746,6 +758,10 @@ function OnShowDrawCard(keys){
             var hero_cost = parseInt(costPanel.text.replace('×', ''));
             var hero_pool = hero_pool_counts[hero_cost];
 
+            if (!champ_tier) {
+                champ_tier = '?';
+            } 
+
             /*START-DRAWSTAT*/  
 
             if (champ_name in hero_counts) {
@@ -770,8 +786,8 @@ function OnShowDrawCard(keys){
 
             var hero_perc_avail = Math.round(prop_at_least_one * 100);
 
-            if (!champ_tier) {
-                champ_tier = '?';
+            if (champ_name == 'Io') {
+                hero_perc_avail = 0.3;
             }
 
             /*END-DRAWSTAT*/ 
