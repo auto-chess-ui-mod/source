@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+##  2019-05-04   
+### Changed
+- Updated Tier indicator to the most recent tier list by qihl.gg
+
 ##  2019-04-30  
 ### Added
 - Added back modified version of color coding the percentages. 
