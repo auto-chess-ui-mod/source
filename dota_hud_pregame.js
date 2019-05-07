@@ -890,7 +890,7 @@ function DrawChessProbabilites() {
     }
     
 	
-    var probability_panel = '<Panel id="level_stats_panel" style="width: 290px; height: 149px; position:256px 934px 0px; background-color: gradient( linear, 0% 0%, 0% 100%, from( rgba(68, 68, 68, 0.95) ), to( rgba(22, 22, 22, 0.95) ) ); border-radius: 4px 4px 0px 0px; z-index: 1;" />';
+    var probability_panel = '<Panel id="level_stats_panel" style="width: 290px; height: 149px; position:256px 934px 0px; background-color: gradient( linear, 0% 0%, 0% 100%, from( rgba(68, 68, 68, 0.95) ), to( rgba(22, 22, 22, 0.95) ) ); border-radius: 4px 4px 0px 0px; z-index: -200;" />';
     hudRoot.BCreateChildren(probability_panel);
 
     var level_probability_panel = '<Panel id ="chess_probability" style="width: 100%; flow-children: down; vertical-align: top; margin-top: 6px;"/>';
@@ -986,7 +986,7 @@ function UpdateProbabilityTextForLevel(level) {
 
 function UpdateProbabilityText(level, isCurrentLevel) {
     Object.keys(cost_draw_probs_by_level[level])
-		.map(function(key) { return cost_draw_probs_by_level[level][key] })
+        .map(function(chess_cost) { return cost_draw_probs_by_level[level][chess_cost] })
         .map(function(probability) { return parseInt(probability * 100) + '%' })
         .forEach(function(probabilityStr, idx) {
             var idPrefix = isCurrentLevel ? 'current' : 'next';
