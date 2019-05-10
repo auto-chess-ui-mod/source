@@ -859,7 +859,7 @@ function OnSyncHp(data) {
     if (data.player_id == courier_player_id && current_gold != previous_courier_gold) {
         //if someone has spent 5 gold they have either leveled or bought a 5 cost unit
         if (current_gold == previous_courier_gold - 5) {
-            UpdateXPGoldText();
+            OnXPGained();
         }
 
         previous_courier_gold = current_gold;
