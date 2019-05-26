@@ -227,7 +227,7 @@ function calculate_draw_prop(champ_input, hero_counts_input, courier_level_input
 
 // Data inputs
 
-var hero_not_avail = ['chess_riki', 'chess_kael', 'chess_sk', 'chess_slark', 'chess_sven', 'chess_lich'];
+var hero_not_avail = ['chess_riki', 'chess_kael', 'chess_sk', 'chess_slark', 'chess_om'];
 var hero_out_of_pool = ['chess_io'];
 
 var size_cost_pool_max = {1 : 0, 2 : 0, 3 : 0, 4 : 0, 5 : 0}
@@ -433,9 +433,9 @@ var hero_dict = {'chess_abaddon': {'cost': 3, 'level': 1, 'name': 'Abaddon'},
 'chess_ld': {'cost': 4, 'level': 1, 'name': 'Lone Druid'},
 'chess_ld1': {'cost': 4, 'level': 2, 'name': 'Lone Druid'},
 'chess_ld11': {'cost': 4, 'level': 3, 'name': 'Lone Druid'},
-'chess_lich': {'cost': 5, 'level': 1, 'name': 'Lich'},
-'chess_lich1': {'cost': 5, 'level': 2, 'name': 'Lich'},
-'chess_lich11': {'cost': 5, 'level': 3, 'name': 'Lich'},
+'chess_lich': {'cost': 2, 'level': 1, 'name': 'Lich'},
+'chess_lich1': {'cost': 2, 'level': 2, 'name': 'Lich'},
+'chess_lich11': {'cost': 2, 'level': 3, 'name': 'Lich'},
 'chess_light': {'cost': 4, 'level': 1, 'name': 'Keeper of the Light'},
 'chess_light1': {'cost': 4, 'level': 2, 'name': 'Keeper of the Light'},
 'chess_light11': {'cost': 4, 'level': 3, 'name': 'Keeper of the Light'},
@@ -505,9 +505,9 @@ var hero_dict = {'chess_abaddon': {'cost': 3, 'level': 1, 'name': 'Abaddon'},
 'chess_ss': {'cost': 1, 'level': 1, 'name': 'Shadow Shaman'},
 'chess_ss1': {'cost': 1, 'level': 2, 'name': 'Shadow Shaman'},
 'chess_ss11': {'cost': 1, 'level': 3, 'name': 'Shadow Shaman'},
-'chess_sven': {'cost': 1, 'level': 1, 'name': 'Sven'},
-'chess_sven1': {'cost': 1, 'level': 2, 'name': 'Sven'},
-'chess_sven11': {'cost': 1, 'level': 3, 'name': 'Sven'},
+'chess_sven': {'cost': 5, 'level': 1, 'name': 'Sven'},
+'chess_sven1': {'cost': 5, 'level': 2, 'name': 'Sven'},
+'chess_sven11': {'cost': 5, 'level': 3, 'name': 'Sven'},
 'chess_ta': {'cost': 4, 'level': 1, 'name': 'Templar Assassin'},
 'chess_ta1': {'cost': 4, 'level': 2, 'name': 'Templar Assassin'},
 'chess_ta11': {'cost': 4, 'level': 3, 'name': 'Templar Assassin'},
