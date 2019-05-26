@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+##  2019-05-26   
+### Changed
+- Updated heroes for May 25th update (thanks `boingy`!)
+- Improved ui for level probabilities (thanks `boingy`!)
+
 ##  2019-05-04   
 ### Changed
 - Updated Tier indicator to the most recent tier list by qihl.gg
