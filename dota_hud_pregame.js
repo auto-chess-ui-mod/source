@@ -227,7 +227,7 @@ function calculate_draw_prop(champ_input, hero_counts_input, courier_level_input
 
 // Data inputs
 
-var hero_not_avail = ['chess_riki', 'chess_kael', 'chess_sk', 'chess_slark', 'chess_sven', 'chess_lich'];
+var hero_not_avail = ['chess_riki', 'chess_kael', 'chess_sk', 'chess_slark', 'chess_om'];
 var hero_out_of_pool = ['chess_io'];
 
 var size_cost_pool_max = {1 : 0, 2 : 0, 3 : 0, 4 : 0, 5 : 0}
@@ -433,9 +433,9 @@ var hero_dict = {'chess_abaddon': {'cost': 3, 'level': 1, 'name': 'Abaddon'},
 'chess_ld': {'cost': 4, 'level': 1, 'name': 'Lone Druid'},
 'chess_ld1': {'cost': 4, 'level': 2, 'name': 'Lone Druid'},
 'chess_ld11': {'cost': 4, 'level': 3, 'name': 'Lone Druid'},
-'chess_lich': {'cost': 5, 'level': 1, 'name': 'Lich'},
-'chess_lich1': {'cost': 5, 'level': 2, 'name': 'Lich'},
-'chess_lich11': {'cost': 5, 'level': 3, 'name': 'Lich'},
+'chess_lich': {'cost': 2, 'level': 1, 'name': 'Lich'},
+'chess_lich1': {'cost': 2, 'level': 2, 'name': 'Lich'},
+'chess_lich11': {'cost': 2, 'level': 3, 'name': 'Lich'},
 'chess_light': {'cost': 4, 'level': 1, 'name': 'Keeper of the Light'},
 'chess_light1': {'cost': 4, 'level': 2, 'name': 'Keeper of the Light'},
 'chess_light11': {'cost': 4, 'level': 3, 'name': 'Keeper of the Light'},
@@ -505,9 +505,9 @@ var hero_dict = {'chess_abaddon': {'cost': 3, 'level': 1, 'name': 'Abaddon'},
 'chess_ss': {'cost': 1, 'level': 1, 'name': 'Shadow Shaman'},
 'chess_ss1': {'cost': 1, 'level': 2, 'name': 'Shadow Shaman'},
 'chess_ss11': {'cost': 1, 'level': 3, 'name': 'Shadow Shaman'},
-'chess_sven': {'cost': 1, 'level': 1, 'name': 'Sven'},
-'chess_sven1': {'cost': 1, 'level': 2, 'name': 'Sven'},
-'chess_sven11': {'cost': 1, 'level': 3, 'name': 'Sven'},
+'chess_sven': {'cost': 5, 'level': 1, 'name': 'Sven'},
+'chess_sven1': {'cost': 5, 'level': 2, 'name': 'Sven'},
+'chess_sven11': {'cost': 5, 'level': 3, 'name': 'Sven'},
 'chess_ta': {'cost': 4, 'level': 1, 'name': 'Templar Assassin'},
 'chess_ta1': {'cost': 4, 'level': 2, 'name': 'Templar Assassin'},
 'chess_ta11': {'cost': 4, 'level': 3, 'name': 'Templar Assassin'},
@@ -595,7 +595,7 @@ var cost_draw_probs_by_level = {
 
 var local_player_team;
 var user_steam_id;
-var courier_id, courier_player_id, previous_courier_xp_to_level, previous_courier_gold;
+var courier_id, courier_player_id, previous_courier_xp_to_level, previous_courier_level, previous_courier_gold;
 var enemies_steam_ids = {};
 var first_time = true;
 
@@ -684,12 +684,9 @@ function OnShowTime(keys) {
             find_dota_hud_element('panel_hero_draw_card_' + i).style['height'] = '380px';
         }
 
-        // Add gold indicator
-
-        var parentPanelPortrait = find_dota_hud_element('minimap_container');
-        var template_gold = '<Label text="1xp (5 gold) for lvl up" id="gold_text" style="font-size: 22px; font-weight: bold; margin-left: 15px; margin-top: -5px;"/>';
-        parentPanelPortrait.BCreateChildren(template_gold);  
-
+        //Add Probability Panel
+        DrawChessProbabilites();
+        $.Schedule(1, OnXPGained);
         // End
 
         first_time = false;
@@ -759,7 +756,7 @@ function OnBattleInfo(data) {
     if (data.type == 'prepare' && !first_time) {
         //need a small delay because battle_info fires just before the XP is changed on the client
         $.Schedule(1, function() {
-            UpdateXPGoldText();
+            OnXPGained();
         });
     }
 
@@ -862,22 +859,141 @@ function OnSyncHp(data) {
     if (data.player_id == courier_player_id && current_gold != previous_courier_gold) {
         //if someone has spent 5 gold they have either leveled or bought a 5 cost unit
         if (current_gold == previous_courier_gold - 5) {
-            UpdateXPGoldText();
+            OnXPGained();
         }
 
         previous_courier_gold = current_gold;
     }
 }
 
-function UpdateXPGoldText() {
+/*
+    Creates a bunch of labels for the chess probabilities in the form:
+    100% / 0% / 0% / 0% / 0% (for example if level 1).
+    There are 5 labels for each chess piece rarity (1-cost, 2-cost etc.) 
+    and 4 labels for each / in between them.
+    I position them using the position style with their x position corresponding
+    to what percantage along the panel they should be placed.
+    I worked out that the 5 probablities should take up 18% of the space each and
+    the slashes should take up 2.5% (5 * 18 + 4 * 2.5 = 100).
+    i.e. the first percentage has a x position of 0%, the 2nd one has a x position of 20.5% (18 + 2.5)
+    I went through all this hassle so that the positioning will be consistent regardless
+    of how much space each of the percentage strings take up so:
+    100% / 0% / 0% / 0% / 0% will be similar to 20% / 25% / 30% / 15% / 10%.
+    There was probably a better way to do this but I found working with the panorama css styles
+    frustrating and inconsistent with normal css and doesn't have stuff like flexbox so *shrug*
+*/
+function DrawChessProbabilites() {
+    var hudRoot;
+
+	for(panel=$.GetContextPanel();panel!=null;panel=panel.GetParent()){
+        hudRoot = panel;
+    }
+    
+	
+    var probability_panel = '<Panel id="level_stats_panel" style="width: 290px; height: 149px; position:256px 934px 0px; background-color: gradient( linear, 0% 0%, 0% 100%, from( rgba(68, 68, 68, 0.95) ), to( rgba(22, 22, 22, 0.95) ) ); border-radius: 4px 4px 0px 0px; z-index: -200;" />';
+    hudRoot.BCreateChildren(probability_panel);
+
+    var level_probability_panel = '<Panel id ="chess_probability" style="width: 100%; flow-children: down; vertical-align: top; margin-top: 6px;"/>';
+    find_dota_hud_element('level_stats_panel').BCreateChildren(level_probability_panel);
+
+    var current_level_probability_panel = '<Panel id="current_level_probability" style="width: 100%; flow-children: none;" />';
+    find_dota_hud_element('chess_probability').BCreateChildren(current_level_probability_panel);
+
+    //Draw slashes
+    for (var i = 1; i <= 4; i++) {
+        var x_position = i * 18 + ((i-1) * 2.5);
+        var slash = '<Label text="/" style="font-size: 20px; width: 2.5%; position: ' + x_position + '% 0% 0%; text-align: center; font-family: Radiance,FZLanTingHei-R-GBK,TH Sarabun New,YDYGO 540,Gulim,MingLiU; text-shadow: 1px 1px 1px 1.0 #000000ff; color: #bbb;"/>';
+        find_dota_hud_element('current_level_probability').BCreateChildren(slash);
+    }
+    
+    //Colours for the text for 1-cost, 2-cost etc.
+    var colours = ['#bbb', '#bbbbff', '#5194f7', '#ff00ff', '#ff8800'];
+
+    //Draw current level probabilities
+    for (var i = 0; i <= 4; i++) {
+        var x_position = i * 20.5;
+
+        var probability_label = '<Label text="" id="current_chess_probabilities' + i + '" style="font-size: 20px; width: 18%; position: ' + x_position + '% 0% 0%; text-align: center; color: ' + colours[i] + '; font-family: Radiance,FZLanTingHei-R-GBK,TH Sarabun New,YDYGO 540,Gulim,MingLiU; text-shadow: 1px 1px 1px 1.0 #000000ff;"/>';
+        find_dota_hud_element('current_level_probability').BCreateChildren(probability_label);
+    }
+
+    var next_level_panel = '<Panel id="next_panel" style="width: 100%; flow-children: down; margin-top: 5px;" />';
+    var next_level_text_panel = '<Panel id="next_level_text" style="width: 100%;" />';
+    var next_level_probability_holder = '<Panel id="next_level_probability_holder" style="width: 100%; flow-children: none; opacity: 0.7;" />';
+    var next_level_probability_panel = '<Panel id="next_level_probability" style="flow-children: none; width: 80%; position: 10% 0% 0%;"/>';
+    find_dota_hud_element('chess_probability').BCreateChildren(next_level_panel);
+    find_dota_hud_element('next_panel').BCreateChildren(next_level_text_panel);
+    find_dota_hud_element('next_panel').BCreateChildren(next_level_probability_holder);
+    find_dota_hud_element('next_level_probability_holder').BCreateChildren(next_level_probability_panel);
+    
+    var next_level_text_label = '<Label text="NEXT LEVEL:" style="font-size: 14px; width: 100%; text-align: center; font-family: Radiance,FZLanTingHei-R-GBK,TH Sarabun New,YDYGO 540,Gulim,MingLiU; text-shadow: 1px 1px 1px 1.0 #000000ff; color: #ffffff; font-weight: bold; letter-spacing: 2px;"/>'
+    find_dota_hud_element('next_level_text').BCreateChildren(next_level_text_label);
+
+    //Draw slashes
+    for (var i = 1; i <= 4; i++) {
+        var x_position = i * 18 + ((i-1) * 2.5);
+        var slash = '<Label text="/" style="font-size: 18px; width: 2.5%; position: ' + x_position + '% 0% 0%; text-align: center; font-family: Radiance,FZLanTingHei-R-GBK,TH Sarabun New,YDYGO 540,Gulim,MingLiU; text-shadow: 1px 1px 1px 1.0 #000000ff; color: #bbb;"/>';
+        find_dota_hud_element('next_level_probability').BCreateChildren(slash);
+    }
+
+    for (var i = 0; i <= 4; i++) {
+        var x_position = i * 20.5;
+
+        var probability_label = '<Label text="" id="next_chess_probabilities' + i + '" style="font-size: 18px; width: 18%; position: ' + x_position + '% 0% 0%; text-align: center; color: ' + colours[i] + '; font-family: Radiance,FZLanTingHei-R-GBK,TH Sarabun New,YDYGO 540,Gulim,MingLiU; text-shadow: 1px 1px 1px 1.0 #000000ff;"/>';
+        find_dota_hud_element('next_level_probability').BCreateChildren(probability_label);
+    }
+
+    var xp_required_to_level_panel = '<Panel id="xp-required-to-level" style="width: 100%; vertical-align: bottom; margin-bottom: 6px;" />';
+    find_dota_hud_element('level_stats_panel').BCreateChildren(xp_required_to_level_panel);
+
+    var xp_required_to_level_label = '<Label text="" id="xp-required-text" style="font-size: 14px; width: 100%; text-align: center; font-family: Radiance,FZLanTingHei-R-GBK,TH Sarabun New,YDYGO 540,Gulim,MingLiU; text-shadow: 1px 1px 1px 1.0 #000000ff; color: #ffffff; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;" />'
+    find_dota_hud_element('xp-required-to-level').BCreateChildren(xp_required_to_level_label);
+}
+
+function OnXPGained() {
+    if (previous_courier_level == 10) {
+        return;
+    }
+
     var courier_xp_to_level = Entities.GetNeededXPToLevel(courier_id) - Entities.GetCurrentXP(courier_id);
+    var courier_level = Entities.GetLevel(courier_id);
 
     if (previous_courier_xp_to_level != courier_xp_to_level) {
         previous_courier_xp_to_level = courier_xp_to_level;
-        find_dota_hud_element('minimap_container').FindChild('gold_text').text = courier_xp_to_level + 'xp (' + Math.ceil(courier_xp_to_level/4)*5 + ' gold) for lvl up';
+        UpdateXPGoldText(courier_xp_to_level);
+    }
+
+    if (previous_courier_level != courier_level) {
+        previous_courier_level = courier_level;
+        UpdateProbabilityTextForLevel(courier_level);
     }
 }
 
+function UpdateXPGoldText(xp_required) {
+    find_dota_hud_element('xp-required-text').text =
+        xp_required + 'XP (' + Math.ceil(xp_required/4)*5 + ' GOLD) TO LEVEL UP';
+}
+
+function UpdateProbabilityTextForLevel(level) {
+    UpdateProbabilityText(level, true);
+    if (level < 10) {
+        UpdateProbabilityText(level + 1, false);
+    } else {
+        find_dota_hud_element('next_panel').RemoveAndDeleteChildren();
+        find_dota_hud_element('xp-required-to-level').RemoveAndDeleteChildren();
+    }
+}
+
+function UpdateProbabilityText(level, isCurrentLevel) {
+    Object.keys(cost_draw_probs_by_level[level])
+        .map(function(chess_cost) { return cost_draw_probs_by_level[level][chess_cost] })
+        .map(function(probability) { return parseInt(probability * 100) + '%' })
+        .forEach(function(probabilityStr, idx) {
+            var idPrefix = isCurrentLevel ? 'current' : 'next';
+            find_dota_hud_element(idPrefix + '_chess_probabilities'+ idx)
+                .text = probabilityStr;
+        });
+}
 
 (function()
 {  
@@ -885,5 +1001,4 @@ function UpdateXPGoldText() {
     GameEvents.Subscribe("battle_info", OnBattleInfo);
     GameEvents.Subscribe("show_draw_card", OnShowDrawCard);
     GameEvents.Subscribe("sync_hp", OnSyncHp);
-
 })();
