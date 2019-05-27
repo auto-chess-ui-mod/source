@@ -292,7 +292,8 @@ var eng_to_cn = {
     'Witch Doctor': '巫医',
     'Zeus': '众神之王',
     'Grimstroke': '天涯墨客',
-    'Dazzle': '暗影牧师'
+    'Dazzle': '暗影牧师',
+    'Sven' : '流浪剑客'
 }
 
 var tier_dict = {
