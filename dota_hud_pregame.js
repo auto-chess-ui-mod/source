@@ -293,7 +293,8 @@ var eng_to_cn = {
     'Zeus': '众神之王',
     'Grimstroke': '天涯墨客',
     'Dazzle': '暗影牧师',
-    'Sven' : '流浪剑客'
+    'Sven' : '流浪剑客',
+    'Winter Wyvern': '寒冬飞龙',
 }
 
 var tier_dict = {
@@ -548,6 +549,9 @@ var hero_dict = {'chess_abaddon': {'cost': 3, 'level': 1, 'name': 'Abaddon'},
 'chess_wr': {'cost': 3, 'level': 1, 'name': 'Windranger'},
 'chess_wr1': {'cost': 3, 'level': 2, 'name': 'Windranger'},
 'chess_wr11': {'cost': 3, 'level': 3, 'name': 'Windranger'},
+'chess_ww': {'cost': 1, 'level': 1, 'name': 'Winter Wyvern'},
+'chess_ww1': {'cost': 1, 'level': 2, 'name': 'Winter Wyvern'},
+'chess_ww11': {'cost': 1, 'level': 3, 'name': 'Winter Wyvern'},
 'chess_zeus': {'cost': 5, 'level': 1, 'name': 'Zeus'},
 'chess_zeus1': {'cost': 5, 'level': 2, 'name': 'Zeus'},
 'chess_zeus11': {'cost': 5, 'level': 3, 'name': 'Zeus'}};
