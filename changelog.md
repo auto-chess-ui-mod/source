@@ -1,8 +1,12 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+##  2019-06-02   
+### Added  
+- Added Winter Wyvern  
+
 ##  2019-05-27   
-### Added
+### Added  
 - Added Chinese translation for Sven      
 
 ##  2019-05-26   
