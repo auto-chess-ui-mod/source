@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+##  2019-06-07
+### Changed
+- Updated Tier indicator to the most recent tier list by Amaz
+
 ##  2019-06-02   
 ### Added  
 - Added Winter Wyvern  
